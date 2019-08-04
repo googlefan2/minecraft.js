@@ -1,7 +1,8 @@
+import Helpers from '../../utils/helpers'
+
 import prisma from './prisma'
 
 import { createServer } from 'http'
-import debug from 'debug'
 import socketIO from 'socket.io'
 
 const app = createServer()
@@ -9,14 +10,12 @@ const io = socketIO(app)
 
 const watchers = {}
 
-const log = output => debug('socket')(JSON.stringify(output, null, 2))
-
 app.listen(5000, () => {
-  log('Socket server running on port 5000.')
+  Helpers.log('socket', 'Socket server running on port 5000.')
 })
 
 io.on('connection', function(socket) {
-  log('user connected.')
+  Helpers.log('socket', 'user connected.')
 
   socket.on('setInfo', async function({ worldId, username }) {
     watchers[socket.id] = username
@@ -35,7 +34,7 @@ io.on('connection', function(socket) {
       }
     })
 
-    log(`set info for '${username}' on world '${worldId}'`)
+    Helpers.log('socket', `set info for '${username}' on world '${worldId}'`)
   })
 
   socket.on('position', function(data) {
@@ -60,11 +59,14 @@ io.on('connection', function(socket) {
       }
     })
 
-    log(`removed info for '${username}' on world '${worldId}'`)
+    Helpers.log(
+      'socket',
+      `removed info for '${username}' on world '${worldId}'`
+    )
   })
 
   socket.on('disconnect', function() {
-    log('user disconnected.')
+    Helpers.log('socket', 'user disconnected.')
   })
 })
 

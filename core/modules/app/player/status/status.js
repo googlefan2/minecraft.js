@@ -3,6 +3,7 @@
  */
 import Config from '../../../../config/config'
 import Stateful from '../../../../lib/stateful/stateful'
+import Helpers from '../../../../utils/helpers'
 
 import TWEEN from '@tweenjs/tween.js'
 
@@ -12,11 +13,19 @@ const SPECTATOR_FOV = Config.camera.spectatorFov
 
 class Status extends Stateful {
   constructor(gamemode, player) {
-    super({ flying: true, hasJumped: false, isOnGround: true, isSprinting: false })
+    super({
+      flying: true,
+      hasJumped: false,
+      isOnGround: true,
+      isSprinting: false,
+      chunkCoords: ''
+    })
 
     this.gamemode = gamemode
 
     this.player = player
+
+    this.chunkChangeEvent = new Event('player-chunk-change')
 
     this.initializeState()
   }
@@ -47,6 +56,13 @@ class Status extends Stateful {
 
   tick = () => {
     TWEEN.update()
+    const { x, y, z } = this.player.getCoordinates()
+    const { coordx, coordz } = Helpers.globalBlockToChunkCoords({ x, y, z })
+    const rep = Helpers.get2DCoordsRep(coordx, coordz)
+    if (this.state.chunkCoords !== rep) {
+      this.setState({ chunkCoords: rep })
+      document.dispatchEvent(this.chunkChangeEvent)
+    }
   }
 
   registerJump = () => {
@@ -128,7 +144,11 @@ class Status extends Stateful {
   }
 
   get isSneaking() {
-    return !this.state.flying && this.state.isOnGround && this.player.controls.movements.down
+    return (
+      !this.state.flying &&
+      this.state.isOnGround &&
+      this.player.controls.movements.down
+    )
   }
 
   tweenCameraFOV = (fov, time = 200) => {

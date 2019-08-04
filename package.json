@@ -11,6 +11,7 @@
     "apollo-link-ws": "^1.0.17",
     "apollo-utilities": "^1.2.1",
     "bcryptjs": "^2.4.3",
+    "bluebird": "^3.5.5",
     "concurrently": "^4.1.1",
     "cookie": "^0.3.1",
     "d3-ease": "^1.0.5",
@@ -18,6 +19,7 @@
     "detect-browser": "^4.6.0",
     "dotenv": "^8.0.0",
     "fast-voxel-raycast": "^0.1.1",
+    "fastintcompression": "^0.0.2",
     "formik": "^1.5.1",
     "graphql": "^14.1.1",
     "graphql-tag": "^2.10.1",
@@ -45,7 +47,6 @@
     "three": "^0.106.2",
     "tic": "^1.0.0",
     "tooloud": "^2.0.4",
-    "worker-threads-pool": "^2.0.0",
     "yup": "^0.27.0"
   },
   "scripts": {

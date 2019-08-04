@@ -161,7 +161,8 @@ input RunCommandInput {
 
 input RequestChunksInput {
   worldId: ID!
-  playerId: ID!
+  username: String!
+  seed: String!
   chunks: [String!]! # array of chunk reps ("x:z")
 }
 

@@ -1,6 +1,10 @@
 import Helpers from '../../utils/helpers'
 import commands from '../../lib/game/commands'
 
+// eslint-disable-next-line import/no-unresolved
+import { Worker } from 'worker_threads'
+import FastIntCompression from 'fastintcompression'
+
 const DEFAULT_MESSAGE = 'Unknown command. Try /help for a list of commands.'
 
 const WorldMutations = {
@@ -204,7 +208,78 @@ const WorldMutations = {
 
     return true
   },
-  async requestChunks(parent, info, {redisClient}) {
+  async requestChunks(
+    parent,
+    {
+      data: { worldId, username, chunks, seed }
+    },
+    { socketIO, redisClient }
+  ) {
+    // PROCESS ARGS
+    const chunkList = chunks.map(chunk => Helpers.get2DCoordsFromRep(chunk))
+
+    // CHECK REDIS
+    await Promise.all(
+      chunkList.map(async ({ x, z }) => {
+        const redisRepData = Helpers.getRedisRep(worldId, x, z, 'data')
+        const redisRepMesh = Helpers.getRedisRep(worldId, x, z, 'mesh')
+        const chunkData = await redisClient.hgetAsync(worldId, redisRepData)
+        const chunkMesh = await redisClient.hgetAsync(worldId, redisRepMesh)
+
+        const emitChunk = (data, meshData) =>
+          socketIO.emit(Helpers.getIORep(worldId, username, 'chunk'), {
+            data,
+            meshData
+          })
+
+        if (chunkData && chunkMesh) {
+          // EMIT TO IO
+          const parsedData = JSON.parse(chunkData)
+          const parsedMesh = JSON.parse(chunkMesh)
+          emitChunk(FastIntCompression.compress(parsedData), parsedMesh)
+        } else {
+          // WORKER START WORKING
+          const worker = new Worker(
+            './server/src/modules/worker/world.worker.js'
+          )
+
+          worker.on('message', async ({ data, meshData }) => {
+            const jsonVoxelData = JSON.stringify(data)
+            const jsonMeshData = JSON.stringify(meshData)
+
+            redisClient.hmset(
+              worldId,
+              redisRepData,
+              jsonVoxelData,
+              redisRepMesh,
+              jsonMeshData,
+              function(err) {
+                if (!err)
+                  Helpers.log(
+                    'redis',
+                    `Saved chunk data of ${x}:${z} of worldId ${worldId} to cache.`
+                  )
+              }
+            )
+
+            emitChunk(FastIntCompression.compress(data), meshData)
+          })
+
+          worker.postMessage({ seed, x, z })
+        }
+      })
+    )
+
+    // IF EXISTS, EMIT IO
+
+    // IF NOT, DO:
+    // OFF-LOAD TO WORKER TO:
+    // 1. GENERATE CHUNK DATA
+    // 2. MESH CHUNK
+    // 3. MAKE GEO
+    // 4. COMPRESS CHUNK DATA
+    // 5. SAVE TO REDIS
+
     return true
   }
 }

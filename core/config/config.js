@@ -122,7 +122,7 @@ const Config = {
       posZ: 5.53
     },
     render: {
-      horzD: 2,
+      horzD: 1,
       vertD: 1
     },
     reachDst: 7,
@@ -136,7 +136,7 @@ const Config = {
     liquid: [0, 9]
   },
   chunk: {
-    size: 10,
+    size: 16,
     neighborWidth: 3,
     height: 256
   },

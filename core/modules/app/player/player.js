@@ -67,6 +67,7 @@ class Player extends Stateful {
 
     this.initUpdaters()
     this.initSubscriptions()
+    this.initListeners()
   }
 
   initUpdaters = () => {
@@ -137,6 +138,16 @@ class Player extends Stateful {
           Helpers.error(e.message)
         }
       })
+  }
+
+  initListeners = () => {
+    document.addEventListener(
+      'player-chunk-change',
+      () => {
+        Helpers.log('damn')
+      },
+      false
+    )
   }
 
   update = () => {
