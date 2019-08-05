@@ -18,11 +18,13 @@ const CreateNewWorld = withRouter(({ history }) => {
   const gamemodeDictionary = {
     SURVIVAL: {
       title: 'Survival',
-      description: 'Search for resources, crafting, gain levels, health and hunger'
+      description:
+        'Search for resources, crafting, gain levels, health and hunger'
     },
     CREATIVE: {
       title: 'Creative',
-      description: 'Unlimited resources, free flying and destroy blocks instantly'
+      description:
+        'Unlimited resources, free flying and destroy blocks instantly'
     }
   }
   const gamemodes = ['SURVIVAL', 'CREATIVE']
@@ -125,8 +127,7 @@ const CreateNewWorld = withRouter(({ history }) => {
                         setGamemode((gamemode + 1) % gamemodes.length)
                       }}
                     >
-                      Game Mode:
-                      {gamemodeDictionary[gamemodes[gamemode]].title}
+                      Game Mode: {gamemodeDictionary[gamemodes[gamemode]].title}
                     </button>
                     <p>{gamemodeDictionary[gamemodes[gamemode]].description}</p>
                   </div>

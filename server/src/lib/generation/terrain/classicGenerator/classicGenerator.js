@@ -234,19 +234,27 @@ module.exports = function ClassicGenerator(seed) {
 
   this.shout = () => console.log('fuck')
 
-  this.setVoxelData = (voxelData, coordx, coordz) => {
-    const offsets = {
-      x: coordx * SIZE - NEIGHBOR_WIDTH,
-      z: coordz * SIZE - NEIGHBOR_WIDTH
-    }
+  this.setVoxelData = (voxelData, coordx, coordy, coordz) => {
+    const offsets = [
+      coordx * SIZE - NEIGHBOR_WIDTH,
+      coordy * SIZE - NEIGHBOR_WIDTH,
+      coordz * SIZE - NEIGHBOR_WIDTH
+    ]
 
     // ACTUAL
-    for (let { x } = offsets; x < offsets.x + SIZE + NEIGHBOR_WIDTH; x++) {
-      for (let { z } = offsets; z < offsets.z + SIZE + NEIGHBOR_WIDTH; z++) {
+    for (let x = offsets[0]; x < offsets[0] + SIZE + NEIGHBOR_WIDTH * 2; x++)
+      for (
+        let z = offsets[2];
+        z < offsets[2] + SIZE + NEIGHBOR_WIDTH * 2;
+        z++
+      ) {
         const maxHeight = this.getHighestBlock(x, z)
-        for (let y = 0; y <= maxWorldHeight; y++) {
+        for (
+          let y = offsets[1];
+          y < offsets[1] + SIZE + NEIGHBOR_WIDTH * 2;
+          y++
+        ) {
           const blockType = this.getBlockInfo(x, y, z, maxHeight)
-
           const mappedCoords = Helpers.getRelativeCoords(x, y, z, offsets)
 
           voxelData.set(
@@ -257,13 +265,12 @@ module.exports = function ClassicGenerator(seed) {
           )
         }
       }
-    }
 
     // TREES
-    for (let { x } = offsets; x < offsets.x + SIZE + NEIGHBOR_WIDTH * 2; x++) {
+    for (let x = offsets[0]; x < offsets[0] + SIZE + NEIGHBOR_WIDTH * 2; x++)
       for (
-        let { z } = offsets;
-        z < offsets.z + SIZE + NEIGHBOR_WIDTH * 2;
+        let z = offsets[2];
+        z < offsets[2] + SIZE + NEIGHBOR_WIDTH * 2;
         z++
       ) {
         const maxHeight = this.getHighestBlock(x, z)
@@ -335,6 +342,5 @@ module.exports = function ClassicGenerator(seed) {
           }
         }
       }
-    }
   }
 }

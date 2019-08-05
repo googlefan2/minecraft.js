@@ -9,13 +9,12 @@ const ndarray = require('ndarray')
 
 const SIZE = Config.chunk.size
 const NEIGHBOR_WIDTH = Config.chunk.neighborWidth
-const MAX_WORLD_HEIGHT = Config.world.maxWorldHeight
 
 parentPort.once('message', workerData => {
   if (!workerData) return
 
   // PROBABLY CACHE THIS???
-  const { seed, x: coordx, z: coordz } = workerData
+  const { seed, x: coordx, y: coordy, z: coordz } = workerData
 
   const generator = new ClassicGenerator(seed)
   const lightingManager = new LightingManager(generator)
@@ -23,33 +22,36 @@ parentPort.once('message', workerData => {
 
   geometryManager.load()
 
-  const voxelData = ndarray(
-    new Uint8Array((SIZE + NEIGHBOR_WIDTH * 2) ** 2 * (MAX_WORLD_HEIGHT + 1)),
-    [SIZE + NEIGHBOR_WIDTH * 2, SIZE + NEIGHBOR_WIDTH * 2, MAX_WORLD_HEIGHT + 1]
-  )
+  const voxelData = ndarray(new Uint8Array((SIZE + NEIGHBOR_WIDTH * 2) ** 3), [
+    SIZE + NEIGHBOR_WIDTH * 2,
+    SIZE + NEIGHBOR_WIDTH * 2,
+    SIZE + NEIGHBOR_WIDTH * 2
+  ])
 
-  const lighting = ndarray(
-    new Uint8Array(SIZE ** 2 * (MAX_WORLD_HEIGHT + 1) * 6),
-    [SIZE, SIZE, MAX_WORLD_HEIGHT + 1, 6]
-  )
+  const lighting = ndarray(new Uint8Array(SIZE ** 3 * 6), [SIZE, SIZE, SIZE, 6])
 
-  const smoothLighting = ndarray(
-    new Uint8Array(SIZE ** 2 * (MAX_WORLD_HEIGHT + 1) * 6 * 3 * 3),
-    [SIZE, SIZE, MAX_WORLD_HEIGHT + 1, 6, 3, 3]
-  )
+  const smoothLighting = ndarray(new Uint8Array(SIZE ** 3 * 6 * 3 * 3), [
+    SIZE,
+    SIZE,
+    SIZE,
+    6,
+    3,
+    3
+  ])
 
-  generator.setVoxelData(voxelData, coordx, coordz)
+  generator.setVoxelData(voxelData, coordx, coordy, coordz)
   lightingManager.setLightingData(
     lighting,
     smoothLighting,
     voxelData,
     coordx,
+    coordy,
     coordz
   )
 
   const dims = [
     SIZE + NEIGHBOR_WIDTH * 2,
-    MAX_WORLD_HEIGHT + 1,
+    SIZE + NEIGHBOR_WIDTH * 2,
     SIZE + NEIGHBOR_WIDTH * 2
   ]
 
@@ -60,6 +62,7 @@ parentPort.once('message', workerData => {
     smoothLighting,
     dims,
     coordx,
+    coordy,
     coordz
   )
 

@@ -9,7 +9,7 @@ function ChunkDistributor() {
       func()
       Helpers.log('server', 'Distributed one chunk.')
     }
-  }, 500)
+  }, 50)
 }
 
 ChunkDistributor.prototype.append = function(func) {

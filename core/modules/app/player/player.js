@@ -13,6 +13,7 @@ import PlayerViewport from './viewport/viewport'
 
 const P_I_2_TOE = Config.player.aabb.eye2toe
 const HORZ_D = Config.player.render.horzD
+const VERT_D = Config.player.render.vertD
 
 class Player extends Stateful {
   constructor(
@@ -145,12 +146,14 @@ class Player extends Stateful {
   initListeners = () => {
     document.addEventListener(
       'player-chunk-change',
-      ({ detail: { coordx, coordz } }) => {
+      ({ detail: { coordx, coordy, coordz } }) => {
         const chunks = []
         for (let x = coordx - HORZ_D; x <= coordx + HORZ_D; x++)
-          for (let z = coordz - HORZ_D; z <= coordz + HORZ_D; z++)
-            if (x !== coordx && z !== coordz)
-              chunks.push(Helpers.get2DCoordsRep(x, z))
+          for (let y = coordy - VERT_D; y <= coordy + VERT_D; y++)
+            for (let z = coordz - HORZ_D; z <= coordz + HORZ_D; z++) {
+              if (!this.world.chunkManager.getChunkFromCoords(x, y, z))
+                chunks.push(Helpers.get3DCoordsRep(x, y, z))
+            }
 
         this.apolloClient.mutate({
           mutation: REQUEST_CHUNKS_MUTATION,
@@ -167,7 +170,6 @@ class Player extends Stateful {
   }
 
   update = () => {
-    if (!this.world.getIsReady()) return
     this.controls.tick()
     this.status.tick()
     this.viewport.tick()

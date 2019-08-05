@@ -3,7 +3,6 @@ const Config = require('../../config/config')
 
 const SIZE = Config.chunk.size
 const NEIGHBOR_WIDTH = Config.chunk.neighborWidth
-const MAX_WORLD_HEIGHT = Config.world.maxWorldHeight
 
 class LightingManager {
   constructor(generator) {
@@ -509,16 +508,20 @@ class LightingManager {
     smoothLightingData,
     voxelData,
     coordx,
+    coordy,
     coordz
   ) => {
-    const offsets = {
-      x: coordx * SIZE - NEIGHBOR_WIDTH,
-      z: coordz * SIZE - NEIGHBOR_WIDTH
-    }
+    if (!voxelData.data.find(ele => ele)) return
 
-    for (let x = NEIGHBOR_WIDTH; x < SIZE + NEIGHBOR_WIDTH; x++) {
-      for (let z = NEIGHBOR_WIDTH; z < SIZE + NEIGHBOR_WIDTH; z++) {
-        for (let y = 0; y <= MAX_WORLD_HEIGHT; y++) {
+    const offsets = [
+      coordx * SIZE - NEIGHBOR_WIDTH,
+      coordy * SIZE - NEIGHBOR_WIDTH,
+      coordz * SIZE - NEIGHBOR_WIDTH
+    ]
+
+    for (let x = NEIGHBOR_WIDTH; x < SIZE + NEIGHBOR_WIDTH; x++)
+      for (let z = NEIGHBOR_WIDTH; z < SIZE + NEIGHBOR_WIDTH; z++)
+        for (let y = NEIGHBOR_WIDTH; y < SIZE + NEIGHBOR_WIDTH; y++) {
           if (!Helpers.isLiquid(voxelData.get(x, z, y))) {
             const tempCoords = Helpers.getAbsoluteCoords(x, y, z, offsets)
 
@@ -526,9 +529,6 @@ class LightingManager {
             const tempy = tempCoords.y
             const tempz = tempCoords.z
 
-            /* -------------------------------------------------------------------------- */
-            /*                                  LIGHTING                                  */
-            /* -------------------------------------------------------------------------- */
             const lighting = this.getBlockLighting(
               tempx,
               tempy,
@@ -540,15 +540,12 @@ class LightingManager {
               lightingData.set(
                 x - NEIGHBOR_WIDTH,
                 z - NEIGHBOR_WIDTH,
-                y,
+                y - NEIGHBOR_WIDTH,
                 l,
                 lighting[l]
               )
             }
 
-            /* -------------------------------------------------------------------------- */
-            /*                               SMOOTH LIGHTING                              */
-            /* -------------------------------------------------------------------------- */
             const smoothLighting = this.getBlockSmoothLighting(
               x,
               y,
@@ -562,7 +559,7 @@ class LightingManager {
                     smoothLightingData.set(
                       x - NEIGHBOR_WIDTH,
                       z - NEIGHBOR_WIDTH,
-                      y,
+                      y - NEIGHBOR_WIDTH,
                       l,
                       m,
                       n,
@@ -573,8 +570,6 @@ class LightingManager {
             }
           }
         }
-      }
-    }
   }
 }
 

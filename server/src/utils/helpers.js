@@ -7,7 +7,6 @@ const debug = require('debug')
 const SIZE = Config.chunk.size
 const DIMENSION = Config.block.dimension
 const NEIGHBOR_WIDTH = Config.chunk.neighborWidth
-const MAX_WORLD_HEIGHT = Config.world.maxWorldHeight
 const TRANSPARENT_BLOCKS = Config.block.transparent
 const LIQUID_BLOCKS = Config.block.liquid
 const PLANT_BLOCKS = Config.block.plant
@@ -49,11 +48,11 @@ class Helpers {
     return jwt.sign({ userId }, 'thisisasecret', { expiresIn: '7 days' })
   }
 
-  static getWorldChunkRep = (worldId, cx, cz) =>
-    `${worldId}::${Helpers.get2DCoordsRep(cx, cz)}`
+  static getWorldChunkRep = (worldId, cx, cy, cz) =>
+    `${worldId}::${Helpers.get3DCoordsRep(cx, cy, cz)}`
 
-  static getRedisRep = (worldId, coordx, coordz, key) =>
-    `${Helpers.getWorldChunkRep(worldId, coordx, coordz)}::${key}`
+  static getRedisRep = (worldId, coordx, coordy, coordz, key) =>
+    `${Helpers.getWorldChunkRep(worldId, coordx, coordy, coordz)}::${key}`
 
   static getIORep = (worldId, username, key) =>
     `${worldId}::${username}::${key}`
@@ -69,28 +68,28 @@ class Helpers {
     return `${x}:${y}:${z}`
   }
 
-  static get2DCoordsFromRep = rep => {
-    const [x, z] = rep.split(':')
-    return { x: parseInt(x, 10), z: parseInt(z, 10) }
+  static get3DCoordsFromRep = rep => {
+    const [x, y, z] = rep.split(':')
+    return { x: parseInt(x, 10), y: parseInt(y, 10), z: parseInt(z, 10) }
   }
 
   static getRelativeCoords = (x, y, z, offsets) => ({
-    x: x - offsets.x,
-    y,
-    z: z - offsets.z
+    x: x - offsets[0],
+    y: y - offsets[1],
+    z: z - offsets[2]
   })
 
   static getAbsoluteCoords = (x, y, z, offsets) => ({
-    x: x + offsets.x,
-    y,
-    z: z + offsets.z
+    x: x + offsets[0],
+    y: y + offsets[1],
+    z: z + offsets[2]
   })
 
   static checkWithinChunk = (x, y, z) =>
     x >= 0 &&
     x < SIZE + NEIGHBOR_WIDTH * 2 &&
     y >= 0 &&
-    y <= MAX_WORLD_HEIGHT &&
+    y < SIZE + NEIGHBOR_WIDTH * 2 &&
     z >= 0 &&
     z < SIZE + NEIGHBOR_WIDTH * 2
 
@@ -127,9 +126,16 @@ class Helpers {
 
   static isPassable = type => PASSABLE_BLOCKS.includes(type)
 
-  static chunkBlockToGlobalBlock = ({ x: bx, y, z: bz, coordx, coordz }) => ({
+  static chunkBlockToGlobalBlock = ({
+    x: bx,
+    y: by,
+    z: bz,
+    coordx,
+    coordy,
+    coordz
+  }) => ({
     x: Math.floor(coordx * SIZE + bx),
-    y,
+    y: Math.floor(coordy * SIZE + by),
     z: Math.floor(coordz * SIZE + bz)
   })
 

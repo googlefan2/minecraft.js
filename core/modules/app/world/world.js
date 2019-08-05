@@ -28,7 +28,6 @@ class World extends Stateful {
       seed,
       time,
       days,
-      y: playerData.y,
       playerId: playerData.id
     }
 
@@ -51,19 +50,8 @@ class World extends Stateful {
   }
 
   init = () => {
-    this.initPlayer()
     this.initUpdaters()
     this.initSubscriptions()
-  }
-
-  initPlayer = () => {
-    if (Helpers.approxEquals(this.data.y, Number.MIN_SAFE_INTEGER, 5))
-      this.workerManager.queueSpecificChunk({
-        cmd: 'GET_HIGHEST',
-        x: 0,
-        z: 0
-      })
-    else this.setState({ isSetup: true })
   }
 
   initUpdaters = () => {
@@ -125,30 +113,29 @@ class World extends Stateful {
 
     this.ioClient.on(
       Helpers.getIORep(this.data.id, this.player.data.user.username, 'chunk'),
-      ({ coordx, coordz }) => {
+      ({ coordx, coordy, coordz }) => {
         this.apolloClient
           .query({
             query: GET_CHUNK_QUERY,
             variables: {
               worldId: this.data.id,
               x: coordx,
+              y: coordy,
               z: coordz
             }
           })
-          .then(() => console.log('do absolutely nothing'))
+          .then(({ data }) => {
+            this.chunkManager.handleNewChunk(coordx, coordy, coordz, data)
+          })
       }
     )
   }
 
   update = () => {
-    this.workerManager.update()
-    this.chunkManager.update()
     this.sky.tick()
   }
 
   updateEnv = () => {
-    if (!this.state.isSetup) return
-
     const playerPos = this.player.getCoordinates()
     const { coordx, coordy, coordz } = Helpers.globalBlockToChunkCoords(
       playerPos

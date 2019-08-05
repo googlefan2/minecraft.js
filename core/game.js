@@ -71,7 +71,6 @@ class Game {
       this.ioClient,
       container,
       {
-        y: playerData.y,
         id: playerData.id
       }
     )

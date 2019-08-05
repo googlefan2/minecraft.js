@@ -129,7 +129,7 @@ const Config = {
     headBodyDeg: Math.PI / 4
   },
   block: {
-    dimension: 32,
+    dimension: 24,
     plant: [31],
     transparent: [0, 9, 18, 31, 95],
     passable: [0, 9, 31],

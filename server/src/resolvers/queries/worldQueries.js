@@ -21,12 +21,12 @@ const WorldQueries = {
   async getChunk(
     parent,
     {
-      data: { worldId, x, z }
+      data: { worldId, x, y, z }
     },
     { redisClient }
   ) {
-    const redisRepData = Helpers.getRedisRep(worldId, x, z, 'data')
-    const redisRepMesh = Helpers.getRedisRep(worldId, x, z, 'mesh')
+    const redisRepData = Helpers.getRedisRep(worldId, x, y, z, 'data')
+    const redisRepMesh = Helpers.getRedisRep(worldId, x, y, z, 'mesh')
     const chunkData = await redisClient.hgetAsync(worldId, redisRepData)
     const chunkMesh = await redisClient.hgetAsync(worldId, redisRepMesh)
     const parsedData = JSON.parse(chunkData)

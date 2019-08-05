@@ -1,5 +1,6 @@
 import Helpers from '../../utils/helpers'
 import commands from '../../lib/game/commands'
+import { ClassicGenerator } from '../../lib/generation/terrain'
 
 // eslint-disable-next-line import/no-unresolved
 import { Worker } from 'worker_threads'
@@ -48,6 +49,9 @@ const WorldMutations = {
       }
     })
 
+    const tempGenerator = new ClassicGenerator(seed)
+    const playerY = tempGenerator.getHighestBlock(0, 0)
+
     // Adding owner into world
     await prisma.mutation.createPlayer({
       data: {
@@ -64,7 +68,7 @@ const WorldMutations = {
           }
         },
         x: 0,
-        y: Number.MIN_SAFE_INTEGER,
+        y: playerY,
         z: 0,
         dirx: 0,
         diry: 0,
@@ -103,8 +107,9 @@ const WorldMutations = {
       info
     )
   },
-  async deleteWorld(parent, args, { prisma }) {
-    await prisma.mutation.deleteWorld({ where: { id: args.worldId } })
+  async deleteWorld(parent, { worldId }, { prisma, redisClient }) {
+    await prisma.mutation.deleteWorld({ where: { id: worldId } })
+    await redisClient.delAsync(worldId)
     return true
   },
   async runCommand(
@@ -214,32 +219,35 @@ const WorldMutations = {
     {
       data: { worldId, username, chunks, seed }
     },
-    { socketIO, redisClient }
+    { socketIO, redisClient, chunkDistro }
   ) {
     // PROCESS ARGS
-    const chunkList = chunks.map(chunk => Helpers.get2DCoordsFromRep(chunk))
+    const chunkList = chunks.map(chunk => Helpers.get3DCoordsFromRep(chunk))
 
     // CHECK REDIS
     await Promise.all(
-      chunkList.map(async ({ x, z }) => {
-        const redisRepData = Helpers.getRedisRep(worldId, x, z, 'data')
-        const redisRepMesh = Helpers.getRedisRep(worldId, x, z, 'mesh')
+      chunkList.map(async ({ x, y, z }) => {
+        const redisRepData = Helpers.getRedisRep(worldId, x, y, z, 'data')
+        const redisRepMesh = Helpers.getRedisRep(worldId, x, y, z, 'mesh')
         const chunkData = await redisClient.hgetAsync(worldId, redisRepData)
         const chunkMesh = await redisClient.hgetAsync(worldId, redisRepMesh)
 
-        const worldChunkRep = Helpers.getWorldChunkRep(worldId, x, z)
+        const worldChunkRep = Helpers.getWorldChunkRep(worldId, x, y, z)
         if (chunkCache[worldChunkRep])
           // THIS MEANS WORKERS ARE STILL WORKING ON IT
           return
         chunkCache[worldChunkRep] = true
 
         const emitChunk = () => {
-          const ioRep = Helpers.getIORep(worldId, username, 'chunk')
-          socketIO.emit(ioRep, {
-            coordx: x,
-            coordz: z
+          chunkDistro.append(() => {
+            const ioRep = Helpers.getIORep(worldId, username, 'chunk')
+            socketIO.emit(ioRep, {
+              coordx: x,
+              coordy: y,
+              coordz: z
+            })
+            chunkCache[worldChunkRep] = false
           })
-          chunkCache[worldChunkRep] = false
         }
 
         if (chunkData && chunkMesh) {
@@ -265,7 +273,11 @@ const WorldMutations = {
                 if (!err)
                   Helpers.log(
                     'redis',
-                    `Saved chunk data of ${x}:${z} of worldId ${worldId} to cache.`
+                    `Saved chunk data of ${Helpers.get3DCoordsRep(
+                      x,
+                      y,
+                      z
+                    )} of worldId ${worldId} to cache.`
                   )
               }
             )
@@ -273,7 +285,7 @@ const WorldMutations = {
             emitChunk()
           })
 
-          worker.postMessage({ seed, x, z })
+          worker.postMessage({ seed, x, y, z })
         }
       })
     )

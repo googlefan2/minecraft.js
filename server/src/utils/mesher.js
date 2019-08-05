@@ -13,7 +13,6 @@ const {
 
 const LEVEL_OF_DETAIL = Config.scene.lod
 const NEIGHBOR_WIDTH = Config.chunk.neighborWidth
-const MAX_WORLD_HEIGHT = Config.world.maxWorldHeight
 
 class Mesher {
   static getSmoothLightingSide = (smoothLighting, i, j, k, l) => {
@@ -93,20 +92,21 @@ class Mesher {
     smoothLighting,
     dims,
     coordx,
+    coordy,
     coordz
   ) {
     const planes = []
 
     for (let x = NEIGHBOR_WIDTH; x < dims[0] - NEIGHBOR_WIDTH; x++) {
       for (let z = NEIGHBOR_WIDTH; z < dims[2] - NEIGHBOR_WIDTH; z++) {
-        for (let y = 0; y <= MAX_WORLD_HEIGHT; y++) {
+        for (let y = NEIGHBOR_WIDTH; y < dims[1] - NEIGHBOR_WIDTH; y++) {
           // dismiss air
           const type = voxelData.get(x, z, y)
 
           if (type === 0) continue
 
           const wx = x - NEIGHBOR_WIDTH
-          const wy = y
+          const wy = y - NEIGHBOR_WIDTH
           const wz = z - NEIGHBOR_WIDTH
 
           const pos = Helpers.chunkBlockToGlobalBlock({
@@ -114,6 +114,7 @@ class Mesher {
             y: wy,
             z: wz,
             coordx,
+            coordy,
             coordz
           })
 

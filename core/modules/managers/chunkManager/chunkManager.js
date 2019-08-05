@@ -3,14 +3,20 @@ import Config from '../../../config/config'
 
 import Mesher from './mesher'
 import Chunk from './chunk'
-import TestChunk from './testChunk'
 import ChunkGenWorker from './chunkGen.worker'
 
 import * as THREE from 'three'
+import workerize from 'workerize'
 
-const MAX_WORKER_COUNT = Config.tech.maxWorkerCount
 const HORZ_D = Config.player.render.horzD
 const VERT_D = Config.player.render.vertD
+
+const parser = workerize(`
+  export function parse(data) {
+    const parsed = JSON.parse(data)
+    return parsed
+  }
+`)
 
 class ChunkManager {
   constructor(scene, seed, resourceManager, workerManager, changedBlocks) {
@@ -22,8 +28,6 @@ class ChunkManager {
 
     this.dirtyChunks = []
     this.chunks = {}
-
-    this.testChunks = {}
 
     this.isReady = false
 
@@ -75,9 +79,6 @@ class ChunkManager {
   surroundingChunksCheck = (coordx, coordy, coordz) => {
     const updatedChunks = {}
 
-    let count = 0
-    let allGood = true
-
     for (let x = coordx - HORZ_D; x <= coordx + HORZ_D; x++) {
       for (let z = coordz - HORZ_D; z <= coordz + HORZ_D; z++) {
         for (let y = coordy - VERT_D; y <= coordy + VERT_D; y++) {
@@ -85,17 +86,7 @@ class ChunkManager {
 
           const tempChunk = this.getChunkFromCoords(x, y, z)
 
-          if (!tempChunk) {
-            if (count < (navigator.hardwareConcurrency || MAX_WORKER_COUNT)) {
-              this.makeChunk(x, y, z)
-              count++
-            } else allGood = false
-            continue
-          }
-          if (tempChunk.getLoading()) {
-            allGood = false
-            continue
-          }
+          if (!tempChunk) continue
 
           if (!tempChunk.getIsInScene()) {
             // IF NOT YET ADDED TO SCENE
@@ -116,21 +107,22 @@ class ChunkManager {
       }
     })
     shouldBeRemoved.forEach(obj => this.scene.remove(obj))
-
-    if (!this.isReady && allGood) this.isReady = true
   }
 
-  handleNewChunk = ioData => {
+  handleNewChunk = async (cx, cy, cz, ioData) => {
     if (!ioData) return
-    const { coordx, coordz, data, meshData } = ioData
-    const rep = Helpers.get2DCoordsRep(coordx, coordz)
 
-    if (this.testChunks[rep]) return
+    const rep = Helpers.get3DCoordsRep(cx, cy, cz)
+    if (this.getChunkFromCoords(cx, cy, cz)) return
 
-    const newChunk = new TestChunk(coordx, coordz)
+    const { data, meshData } = await parser.parse(ioData.getChunk)
+
+    const newChunk = new Chunk(cx, cy, cz)
     newChunk.setData(data)
 
     this.meshChunk(newChunk, meshData)
+
+    this.chunks[rep] = newChunk
   }
 
   markCB = ({ type, x, y, z }) => {

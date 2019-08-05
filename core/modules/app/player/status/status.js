@@ -55,13 +55,18 @@ class Status extends Stateful {
   tick = () => {
     TWEEN.update()
     const { x, y, z } = this.player.getCoordinates()
-    const { coordx, coordz } = Helpers.globalBlockToChunkCoords({ x, y, z })
-    const rep = Helpers.get2DCoordsRep(coordx, coordz)
+    const { coordx, coordy, coordz } = Helpers.globalBlockToChunkCoords({
+      x,
+      y,
+      z
+    })
+    const rep = Helpers.get3DCoordsRep(coordx, coordy, coordz)
     if (this.state.chunkCoords !== rep) {
       this.setState({ chunkCoords: rep })
       const chunkChangeEvent = new CustomEvent('player-chunk-change', {
         detail: {
           coordx,
+          coordy,
           coordz
         }
       })
