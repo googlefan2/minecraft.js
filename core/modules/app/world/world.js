@@ -9,7 +9,8 @@ import Stateful from '../../../lib/stateful/stateful'
 import { Chat } from '../../interfaces'
 import {
   UPDATE_WORLD_MUTATION,
-  WORLD_SUBSCRIPTION
+  WORLD_SUBSCRIPTION,
+  GET_CHUNK_QUERY
   // OTHER_PLAYERS_SUBSCRIPTION
 } from '../../../lib/graphql'
 
@@ -121,6 +122,22 @@ class World extends Stateful {
         username: pkg.username
       })
     })
+
+    this.ioClient.on(
+      Helpers.getIORep(this.data.id, this.player.data.user.username, 'chunk'),
+      ({ coordx, coordz }) => {
+        this.apolloClient
+          .query({
+            query: GET_CHUNK_QUERY,
+            variables: {
+              worldId: this.data.id,
+              x: coordx,
+              z: coordz
+            }
+          })
+          .then(() => console.log('do absolutely nothing'))
+      }
+    )
   }
 
   update = () => {

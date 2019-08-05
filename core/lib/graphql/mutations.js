@@ -12,7 +12,16 @@ export const UPDATE_PLAYER_MUTATION = gql`
     $data: String
   ) {
     updatePlayer(
-      data: { id: $id, x: $x, y: $y, z: $z, dirx: $dirx, diry: $diry, cursor: $cursor, data: $data }
+      data: {
+        id: $id
+        x: $x
+        y: $y
+        z: $z
+        dirx: $dirx
+        diry: $diry
+        cursor: $cursor
+        data: $data
+      }
     ) {
       x
       y
@@ -33,6 +42,26 @@ export const UPDATE_WORLD_MUTATION = gql`
 
 export const RUN_COMMAND_MUTATION = gql`
   mutation RunCommand($playerId: ID!, $worldId: ID!, $command: String!) {
-    runCommand(data: { playerId: $playerId, worldId: $worldId, command: $command })
+    runCommand(
+      data: { playerId: $playerId, worldId: $worldId, command: $command }
+    )
+  }
+`
+
+export const REQUEST_CHUNKS_MUTATION = gql`
+  mutation RequestChunks(
+    $worldId: ID!
+    $username: String!
+    $chunks: [String!]!
+    $seed: String!
+  ) {
+    requestChunks(
+      data: {
+        worldId: $worldId
+        username: $username
+        chunks: $chunks
+        seed: $seed
+      }
+    )
   }
 `

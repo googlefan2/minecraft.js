@@ -58,7 +58,12 @@ self.onmessage = function(e) {
         SIZE + NEIGHBOR_WIDTH * 2
       ])
 
-      const lighting = ndarray(new Uint8Array(SIZE ** 3 * 6), [SIZE, SIZE, SIZE, 6])
+      const lighting = ndarray(new Uint8Array(SIZE ** 3 * 6), [
+        SIZE,
+        SIZE,
+        SIZE,
+        6
+      ])
 
       const smoothLighting = ndarray(new Uint8Array(SIZE ** 3 * 6 * 3 * 3), [
         SIZE,
@@ -70,9 +75,20 @@ self.onmessage = function(e) {
       ])
 
       self.generator.setVoxelData(blocks, coordx, coordy, coordz)
-      self.lightingManager.setLightingData(lighting, smoothLighting, blocks, coordx, coordy, coordz)
+      self.lightingManager.setLightingData(
+        lighting,
+        smoothLighting,
+        blocks,
+        coordx,
+        coordy,
+        coordz
+      )
 
-      const dims = [SIZE + NEIGHBOR_WIDTH * 2, SIZE + NEIGHBOR_WIDTH * 2, SIZE + NEIGHBOR_WIDTH * 2]
+      const dims = [
+        SIZE + NEIGHBOR_WIDTH * 2,
+        SIZE + NEIGHBOR_WIDTH * 2,
+        SIZE + NEIGHBOR_WIDTH * 2
+      ]
 
       if (blocks.data.find(ele => ele)) {
         const planes = Mesher.calcPlanes(

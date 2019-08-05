@@ -3,6 +3,7 @@ import Config from '../../../config/config'
 
 import Mesher from './mesher'
 import Chunk from './chunk'
+import TestChunk from './testChunk'
 import ChunkGenWorker from './chunkGen.worker'
 
 import * as THREE from 'three'
@@ -21,6 +22,8 @@ class ChunkManager {
 
     this.dirtyChunks = []
     this.chunks = {}
+
+    this.testChunks = {}
 
     this.isReady = false
 
@@ -117,6 +120,19 @@ class ChunkManager {
     if (!this.isReady && allGood) this.isReady = true
   }
 
+  handleNewChunk = ioData => {
+    if (!ioData) return
+    const { coordx, coordz, data, meshData } = ioData
+    const rep = Helpers.get2DCoordsRep(coordx, coordz)
+
+    if (this.testChunks[rep]) return
+
+    const newChunk = new TestChunk(coordx, coordz)
+    newChunk.setData(data)
+
+    this.meshChunk(newChunk, meshData)
+  }
+
   markCB = ({ type, x, y, z }) => {
     if (type === 0) return
 
@@ -145,7 +161,11 @@ class ChunkManager {
 
     const [geoJSON, materials] = meshData
 
-    const mesh = Mesher.processMeshData(geoJSON, materials, this.resourceManager)
+    const mesh = Mesher.processMeshData(
+      geoJSON,
+      materials,
+      this.resourceManager
+    )
 
     if (!mesh) return
 
@@ -164,7 +184,11 @@ class ChunkManager {
   getChunkFromRep = rep => this.chunks[rep]
 
   getTypeAt = (x, y, z) => {
-    const { coordx, coordy, coordz } = Helpers.globalBlockToChunkCoords({ x, y, z })
+    const { coordx, coordy, coordz } = Helpers.globalBlockToChunkCoords({
+      x,
+      y,
+      z
+    })
     const { x: bx, y: by, z: bz } = Helpers.globalBlockToChunkBlock({ x, y, z })
     const chunk = this.getChunkFromCoords(coordx, coordy, coordz)
 

@@ -24,20 +24,18 @@ parentPort.once('message', workerData => {
   geometryManager.load()
 
   const voxelData = ndarray(
-    new Uint8Array((SIZE + NEIGHBOR_WIDTH * 2) ** 2 * MAX_WORLD_HEIGHT),
-    [SIZE + NEIGHBOR_WIDTH * 2, SIZE + NEIGHBOR_WIDTH * 2, MAX_WORLD_HEIGHT]
+    new Uint8Array((SIZE + NEIGHBOR_WIDTH * 2) ** 2 * (MAX_WORLD_HEIGHT + 1)),
+    [SIZE + NEIGHBOR_WIDTH * 2, SIZE + NEIGHBOR_WIDTH * 2, MAX_WORLD_HEIGHT + 1]
   )
 
-  const lighting = ndarray(new Uint8Array(SIZE ** 2 * MAX_WORLD_HEIGHT * 6), [
-    SIZE,
-    SIZE,
-    MAX_WORLD_HEIGHT,
-    6
-  ])
+  const lighting = ndarray(
+    new Uint8Array(SIZE ** 2 * (MAX_WORLD_HEIGHT + 1) * 6),
+    [SIZE, SIZE, MAX_WORLD_HEIGHT + 1, 6]
+  )
 
   const smoothLighting = ndarray(
-    new Uint8Array(SIZE ** 2 * MAX_WORLD_HEIGHT * 6 * 3 * 3),
-    [SIZE, SIZE, MAX_WORLD_HEIGHT, 6, 3, 3]
+    new Uint8Array(SIZE ** 2 * (MAX_WORLD_HEIGHT + 1) * 6 * 3 * 3),
+    [SIZE, SIZE, MAX_WORLD_HEIGHT + 1, 6, 3, 3]
   )
 
   generator.setVoxelData(voxelData, coordx, coordz)
@@ -51,7 +49,7 @@ parentPort.once('message', workerData => {
 
   const dims = [
     SIZE + NEIGHBOR_WIDTH * 2,
-    MAX_WORLD_HEIGHT,
+    MAX_WORLD_HEIGHT + 1,
     SIZE + NEIGHBOR_WIDTH * 2
   ]
 

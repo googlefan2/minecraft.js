@@ -3,6 +3,7 @@ type Query {
   me: User!
   myWorlds: User!
   world(query: String!): World!
+  getChunk(data: GetChunkInput!): String!
 }
 
 type Mutation {
@@ -97,6 +98,12 @@ type Inventory {
   player: Player!
   cursor: Int!
   data: String!
+}
+
+input GetChunkInput {
+  worldId: ID!
+  x: Int!
+  z: Int!
 }
 
 input CreateUserInput {

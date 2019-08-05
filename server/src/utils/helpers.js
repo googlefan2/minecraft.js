@@ -49,16 +49,19 @@ class Helpers {
     return jwt.sign({ userId }, 'thisisasecret', { expiresIn: '7 days' })
   }
 
+  static getWorldChunkRep = (worldId, cx, cz) =>
+    `${worldId}::${Helpers.get2DCoordsRep(cx, cz)}`
+
   static getRedisRep = (worldId, coordx, coordz, key) =>
-    `${worldId}::${Helpers.get2DCoordsRep(coordx, coordz)}::${key}`
+    `${Helpers.getWorldChunkRep(worldId, coordx, coordz)}::${key}`
 
   static getIORep = (worldId, username, key) =>
     `${worldId}::${username}::${key}`
 
   static get2DCoordsRep = (x, z) => `${x}:${z}`
 
-  static get2DCoordsFromRep = rep => {
-    const [x, z] = rep.split(':')
+  static get2DCoordsFromRep = repr => {
+    const [x, z] = repr.toString().split(':')
     return { x: parseInt(x, 10), z: parseInt(z, 10) }
   }
 

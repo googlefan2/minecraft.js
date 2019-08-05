@@ -3,9 +3,10 @@ import commands from '../../lib/game/commands'
 
 // eslint-disable-next-line import/no-unresolved
 import { Worker } from 'worker_threads'
-import FastIntCompression from 'fastintcompression'
 
 const DEFAULT_MESSAGE = 'Unknown command. Try /help for a list of commands.'
+
+const chunkCache = {}
 
 const WorldMutations = {
   async createWorld(parent, args, { prisma, request }, info) {
@@ -226,17 +227,24 @@ const WorldMutations = {
         const chunkData = await redisClient.hgetAsync(worldId, redisRepData)
         const chunkMesh = await redisClient.hgetAsync(worldId, redisRepMesh)
 
-        const emitChunk = (data, meshData) =>
-          socketIO.emit(Helpers.getIORep(worldId, username, 'chunk'), {
-            data,
-            meshData
+        const worldChunkRep = Helpers.getWorldChunkRep(worldId, x, z)
+        if (chunkCache[worldChunkRep])
+          // THIS MEANS WORKERS ARE STILL WORKING ON IT
+          return
+        chunkCache[worldChunkRep] = true
+
+        const emitChunk = () => {
+          const ioRep = Helpers.getIORep(worldId, username, 'chunk')
+          socketIO.emit(ioRep, {
+            coordx: x,
+            coordz: z
           })
+          chunkCache[worldChunkRep] = false
+        }
 
         if (chunkData && chunkMesh) {
           // EMIT TO IO
-          const parsedData = JSON.parse(chunkData)
-          const parsedMesh = JSON.parse(chunkMesh)
-          emitChunk(FastIntCompression.compress(parsedData), parsedMesh)
+          emitChunk()
         } else {
           // WORKER START WORKING
           const worker = new Worker(
@@ -262,7 +270,7 @@ const WorldMutations = {
               }
             )
 
-            emitChunk(FastIntCompression.compress(data), meshData)
+            emitChunk()
           })
 
           worker.postMessage({ seed, x, z })

@@ -138,7 +138,7 @@ const Config = {
   chunk: {
     size: 16,
     neighborWidth: 3,
-    height: 256
+    height: 128
   },
   world: {
     gravity: -16,

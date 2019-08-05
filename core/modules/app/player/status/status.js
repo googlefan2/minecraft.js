@@ -25,8 +25,6 @@ class Status extends Stateful {
 
     this.player = player
 
-    this.chunkChangeEvent = new Event('player-chunk-change')
-
     this.initializeState()
   }
 
@@ -61,7 +59,13 @@ class Status extends Stateful {
     const rep = Helpers.get2DCoordsRep(coordx, coordz)
     if (this.state.chunkCoords !== rep) {
       this.setState({ chunkCoords: rep })
-      document.dispatchEvent(this.chunkChangeEvent)
+      const chunkChangeEvent = new CustomEvent('player-chunk-change', {
+        detail: {
+          coordx,
+          coordz
+        }
+      })
+      document.dispatchEvent(chunkChangeEvent)
     }
   }
 

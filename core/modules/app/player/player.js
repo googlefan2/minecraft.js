@@ -3,7 +3,8 @@ import Helpers from '../../../utils/helpers'
 import Config from '../../../config/config'
 import {
   UPDATE_PLAYER_MUTATION,
-  PLAYER_SUBSCRIPTION
+  PLAYER_SUBSCRIPTION,
+  REQUEST_CHUNKS_MUTATION
 } from '../../../lib/graphql'
 
 import Status from './status/status'
@@ -11,6 +12,7 @@ import PlayerControls from './controls/controls'
 import PlayerViewport from './viewport/viewport'
 
 const P_I_2_TOE = Config.player.aabb.eye2toe
+const HORZ_D = Config.player.render.horzD
 
 class Player extends Stateful {
   constructor(
@@ -143,8 +145,22 @@ class Player extends Stateful {
   initListeners = () => {
     document.addEventListener(
       'player-chunk-change',
-      () => {
-        Helpers.log('damn')
+      ({ detail: { coordx, coordz } }) => {
+        const chunks = []
+        for (let x = coordx - HORZ_D; x <= coordx + HORZ_D; x++)
+          for (let z = coordz - HORZ_D; z <= coordz + HORZ_D; z++)
+            if (x !== coordx && z !== coordz)
+              chunks.push(Helpers.get2DCoordsRep(x, z))
+
+        this.apolloClient.mutate({
+          mutation: REQUEST_CHUNKS_MUTATION,
+          variables: {
+            username: this.data.user.username,
+            worldId: this.world.data.id,
+            chunks,
+            seed: this.world.data.seed
+          }
+        })
       },
       false
     )

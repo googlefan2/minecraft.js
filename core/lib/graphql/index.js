@@ -1,7 +1,10 @@
+export { GET_CHUNK_QUERY } from './queries'
+
 export {
   UPDATE_PLAYER_MUTATION,
   UPDATE_WORLD_MUTATION,
-  RUN_COMMAND_MUTATION
+  RUN_COMMAND_MUTATION,
+  REQUEST_CHUNKS_MUTATION
 } from './mutations'
 
 export {
